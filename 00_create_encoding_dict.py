@@ -20,8 +20,6 @@ ligand_totals = [[atom_type, total]
                  for atom_type, total in ligand_totals.items()]
 ligand_totals = sorted(ligand_totals, key=lambda pair: -pair[1])
 
-print(ligand_totals)
-
 protein_totals = {atom_type: 0 for atom_type in atom_types}
 protein_counts = pd.read_csv("protein_types.csv")
 for i in range(len(protein_counts)):
@@ -39,7 +37,6 @@ selected_atom_types = selected_ligand_types | selected_protein_types
 selected_atom_types = sorted(list(selected_atom_types))
 
 encoding_dict = dict(zip(selected_atom_types, range(len(selected_atom_types))))
-encoding_dict["Others"] = len(encoding_dict)
 
 print(encoding_dict)
 
