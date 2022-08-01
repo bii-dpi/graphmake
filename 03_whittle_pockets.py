@@ -27,7 +27,7 @@ def save_protein_pocket(pdb_id, cutoff=6):
     ligand_coords = np.array(ligand_coords)
 
     pocket_indices = []
-    for protein_coord, i in enumerate(protein_coords):
+    for i, protein_coord in progressbar(list(enumerate(protein_coords))):
         all_dists = np.apply_along_axis(get_dist_fn(protein_coord),
                                         1,
                                         ligand_coords)
@@ -40,6 +40,7 @@ def save_protein_pocket(pdb_id, cutoff=6):
         pickle.dump(protein_pocket_coords, f)
 
 
-for pdb_id in pdb_ids:
-    save_protein_pocket(pdb_id)
+if __name__ == "__main__":
+    with PPE() as executor:
+        executor.map(save_protein_pocket, pdb_ids)
 
