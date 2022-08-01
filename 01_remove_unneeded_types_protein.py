@@ -8,16 +8,38 @@ pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
 
-selected_types = pd.read_pickle("atom_type_encoding_dict.pkl").keys()
+SELECTED_TYPES = pd.read_pickle("atom_type_encoding_dict.pkl").keys()
+SELECTED_STRAINS = ["ALA",
+"CYS",
+"ASP",
+"GLU",
+"PHE",
+"GLY",
+"HIS",
+"ILE",
+"LYS",
+"LEU",
+"MET",
+"ASN",
+"PRO",
+"GLN",
+"ARG",
+"SER",
+"THR",
+"VAL",
+"TRP",
+"TYR",
+"ASX",
+"GLX"]
+
 
 
 def process_line(line):
     line = line.strip().split()[:6]
-    line = [int(line[0]),
-            float(line[2]), float(line[3]), float(line[4]),
+    line = [float(line[2]), float(line[3]), float(line[4]),
             line[5].split(".")[0]]
 
-    if line[-1] not in selected_types:
+    if line[-1] not in SELECTED_TYPES:
         return []
     return line
 
@@ -27,8 +49,9 @@ def save_proc_protein(pdb_id):
         lines = [line.strip("\n") for line in f.readlines()]
     start = lines.index("@<TRIPOS>ATOM") + 1
     end = lines.index("@<TRIPOS>BOND")
-
-    lines = [process_line(line) for line in lines[start: end]]
+    lines = [process_line(line) for line in lines[start: end]
+             if not line.strip().split()[-1] == "WATER" and
+             line.strip().split()[7][:3] in SELECTED_STRAINS]
     lines = [line for line in lines if line]
 
     with open(f"proc_proteins/{pdb_id}.pkl", "wb") as f:
