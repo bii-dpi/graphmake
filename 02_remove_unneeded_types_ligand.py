@@ -1,13 +1,10 @@
-import os
 import pickle
 import warnings
 import pandas as pd
-from progressbar import progressbar
 from concurrent.futures import ProcessPoolExecutor as PPE
 
 
 warnings.filterwarnings('ignore')
-
 
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
@@ -17,8 +14,6 @@ SELECTED_TYPES = pd.read_pickle("atom_type_encoding_dict.pkl").keys()
 
 
 def load_ids(pdb_id):
-    scores = None
-
     scores = pd.read_csv(f"../shallowmake/scores/dock_{pdb_id}_lib.csv")
     return scores.loc[:, ["s_sm_number", "s_m_title"]].dropna()
 

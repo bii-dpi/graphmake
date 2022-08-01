@@ -1,4 +1,3 @@
-import os
 import pickle
 import pandas as pd
 from progressbar import progressbar
@@ -31,7 +30,6 @@ SELECTED_STRAINS = ["ALA",
 "TYR",
 "ASX",
 "GLX"]
-
 
 
 def process_line(line):
