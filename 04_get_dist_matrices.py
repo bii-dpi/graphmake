@@ -12,11 +12,7 @@ pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
 
 
 def save_dist_matrices(pdb_id):
-    try:
-        protein_coords = pd.read_pickle(f"proc_proteins/{pdb_id}_pocket.pkl")
-    except Exception as e:
-        print(e)
-        return  # If not done yet.
+    protein_coords = pd.read_pickle(f"proc_proteins/{pdb_id}_pocket.pkl")
     try:
         if not protein_coords:
             return

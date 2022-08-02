@@ -5,6 +5,8 @@ from progressbar import progressbar
 from sklearn.metrics.pairwise import euclidean_distances
 from concurrent.futures import ProcessPoolExecutor as PPE
 
+need to check
+
 
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
