@@ -1,3 +1,4 @@
+import os
 import pickle
 import numpy as np
 import pandas as pd
@@ -8,26 +9,16 @@ from concurrent.futures import ProcessPoolExecutor as PPE
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
+pdb_ids = [pdb_id for pdb_id in pdb_ids
+           if not os.path.isfile(f"proc_proteins/{pdb_id}_pocket.pkl")]
+print(len(pdb_ids))
+
 
 
 def get_dist_fn(protein_coord):
     protein_coord = np.array(protein_coord)
 
     return lambda row: np.linalg.norm(row - protein_coord)
-
-
-def is_pocket_index(pair):
-    protein_coord, ligand_coords = pair
-    all_dists = np.apply_along_axis(get_dist_fn(protein_coord),
-                                    1,
-                                    ligand_coords)
-
-    return np.min(all_dists) <= 6
-
-
-def is_pocket_index_batch(pair_batch):
-
-    return [is_pocket_index(pair) for pair in pair_batch]
 
 
 def save_protein_pocket(pdb_id, cutoff=6):
@@ -40,19 +31,13 @@ def save_protein_pocket(pdb_id, cutoff=6):
                      for coord in sublist]
     ligand_coords = np.array(ligand_coords)
 
-    protein_batches = np.array_split(protein_coords, 75)
-    pair_batches = []
-    for protein_batch in protein_batches:
-        pair_batches.append([(protein_coord, ligand_coords)
-                             for protein_coord in protein_batch])
-
-    with PPE() as executor:
-        are_pocket_indices_batched = \
-            executor.map(is_pocket_index_batch, pair_batches)
-    are_pocket_indices = [is_pocket_index
-                          for batch in are_pocket_indices_batched
-                          for is_pocket_index in batch]
-    pocket_indices = np.where(are_pocket_indices)[0]
+    pocket_indices = []
+    for i, protein_coord in list(enumerate(protein_coords)):
+        all_dists = np.apply_along_axis(get_dist_fn(protein_coord),
+                                        1,
+                                        ligand_coords)
+        if np.min(all_dists) <= cutoff:
+            pocket_indices.append(i)
 
     with open(f"proc_proteins/{pdb_id}_pocket.pkl", "wb") as f:
         protein_coords = pd.read_pickle(f"proc_proteins/{pdb_id}.pkl")
@@ -61,6 +46,6 @@ def save_protein_pocket(pdb_id, cutoff=6):
 
 
 if __name__ == "__main__":
-    for pdb_id in progressbar(pdb_ids):
-        save_protein_pocket(pdb_id)
+    with PPE() as executor:
+        executor.map(save_protein_pocket, pdb_ids)
 
