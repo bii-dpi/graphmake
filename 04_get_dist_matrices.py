@@ -11,13 +11,15 @@ pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
 
 
-def save_dist_matrices(pdb_id, cutoff=6):
+def save_dist_matrices(pdb_id):
     try:
         protein_coords = pd.read_pickle(f"proc_proteins/{pdb_id}_pocket.pkl")
     except Exception as e:
         print(e)
         return  # If not done yet.
     try:
+        if not protein_coords:
+            return
         protein_coords = [coord[:-1] for coord in protein_coords]
 
         ligand_coords_dict = pd.read_pickle(f"proc_ligands/{pdb_id}.pkl")
@@ -25,7 +27,7 @@ def save_dist_matrices(pdb_id, cutoff=6):
                               for smiles, pair in ligand_coords_dict.items()}
 
         ligand_distance_matrices = dict()
-        for smiles in progressbar(ligand_coords_dict):
+        for smiles in ligand_coords_dict:
             ligand_distance_matrices[smiles] = \
                 euclidean_distances(protein_coords, ligand_coords_dict[smiles])
 
@@ -33,6 +35,7 @@ def save_dist_matrices(pdb_id, cutoff=6):
             pickle.dump(ligand_distance_matrices, f)
     except Exception as e:
         print(e)
+        return
 
 if __name__ == "__main__":
     with PPE() as executor:
