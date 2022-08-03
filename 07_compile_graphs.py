@@ -29,7 +29,8 @@ def update_graph_indicators(graph_indicators, graph_counter, num_nodes):
 
 
 def update_node_attributes(node_attributes, curr_node_attributes):
-    return node_attributes + [",".join(line) for line in curr_node_attributes]
+    return node_attributes + [",".join(str(i) for i in line)
+                              for line in curr_node_attributes]
 
 
 def update_node_labels(node_labels, num_nodes):
@@ -49,8 +50,8 @@ def save_compiled_graphs_loop(lines,
                               graph_indicators,
                               adjacency_list):
     for line in progressbar(lines):
-        (curr_adjacency_list, curr_node_attributes), is_active = \
-            indiv_graphs_dict[line[1]][line[0]]
+        curr_adjacency_list, curr_node_attributes, is_active = \
+            indiv_graphs_dict[seq_to_id_dict[line[1]]][line[0]]
 
         graph_counter += 1
         graph_labels = update_graph_labels(graph_labels, is_active)
@@ -126,6 +127,9 @@ def save_compiled_graphs(direction):
 
     with open(f"compiled_graphs/{direction}_node_attributes.txt", "w"):
         f.write(node_attributes)
+
+    with open(f"compiled_graphs/{direction}_training_marker.pkl", "wb") as f:
+        pickle.dump((num_training_graphs, num_training_nodes), f)
 
 
 def load_indiv_graphs(pdb_id):

@@ -58,8 +58,8 @@ def save_cleaned_text(direction, mode="_normal"):
 selected_b_pdb_ids = get_selected_pdb_ids(available_pdb_ids, b_pdb_ids)
 selected_d_pdb_ids = get_selected_pdb_ids(available_pdb_ids, d_pdb_ids)
 
-print(selected_b_pdb_ids)
-print(selected_d_pdb_ids)
+selected_b_pdb_ids = ["5RA9_A", "6B1U_D", "6Y1E_D", "4MQY_A", "6KHE_A"]
+selected_d_pdb_ids = ["2RL5", "1HWK", "3E2M", "3KG2", "2F4J"]
 
 available_smiles = dict()
 for pdb_id in selected_b_pdb_ids:
