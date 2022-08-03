@@ -8,7 +8,6 @@ from concurrent.futures import ProcessPoolExecutor as PPE
 seq_to_id_dict = pd.read_pickle("b_sequence_to_id_map.pkl")
 seq_to_id_dict.update(pd.read_pickle("d_sequence_to_id_map.pkl"))
 
-
 selected_pdb_ids = ['1W6J_A', '3UNI_B', '6ZWO_B', '6OCU_A', '4YC6_G',
                     '2RGP', '3FRJ', '1B9V', '3H0B', '2PRH']
 
@@ -41,19 +40,14 @@ def update_graph_labels(graph_labels, is_active):
     return graph_labels + [is_active]
 
 
-def save_compiled_graphs(direction, mode, tt):
-    with open(f"cleaned_text/{direction}_{tt}{mode}", "r") as f:
-        lines = [line.split() for line in f.readlines()]
-
-    graph_counter = 0
-    node_counter = 0
-
-    graph_labels = []
-    node_labels = []
-    node_attributes = []
-
-    graph_indicators = []
-    adjacency_list = []
+def save_compiled_graphs_loop(lines,
+                              graph_counter,
+                              node_counter,
+                              graph_labels,
+                              node_labels,
+                              node_attributes,
+                              graph_indicators,
+                              adjacency_list):
     for line in progressbar(lines):
         (curr_adjacency_list, curr_node_attributes), is_active = \
             indiv_graphs_dict[line[1]][line[0]]
@@ -76,14 +70,62 @@ def save_compiled_graphs(direction, mode, tt):
 
         node_counter += num_nodes
 
+    return (graph_counter,
+            node_counter,
+            graph_labels,
+            node_labels,
+            node_attributes,
+            graph_indicators,
+            adjacency_list)
+
+
+def save_compiled_graphs(direction):
+    with open(f"cleaned_text/{direction}_training_normal", "r") as f:
+        lines = [line.split() for line in f.readlines()]
+
+    (graph_counter, node_counter,
+     graph_labels, node_labels, node_attributes,
+     graph_indicators, adjacency_list) = \
+        save_compiled_graphs_loop(lines, 0, 0, [], [], [], [], [])
+
+    num_training_graphs = graph_counter
+    num_training_nodes = node_counter
+
+    with open(f"cleaned_text/{direction}_testing", "r") as f:
+        lines = [line.split() for line in f.readlines()]
+
+    (graph_counter, node_counter,
+     graph_labels, node_labels, node_attributes,
+     graph_indicators, adjacency_list) = \
+        save_compiled_graphs_loop(lines,
+                                  graph_counter,
+                                  node_counter,
+                                  graph_labels,
+                                  node_labels,
+                                  node_attributes,
+                                  graph_indicators,
+                                  adjacency_list)
+
+    graph_labels = convert_to_rows(graph_labels)
     node_labels = convert_to_rows(node_labels)
     node_attributes = convert_to_rows(node_attributes)
     graph_indicators = convert_to_rows(graph_indicators)
     adjancency_list = convert_to_rows(adjancency_list)
 
-    with open(f"compiled_graphs/):
+    with open(f"compiled_graphs/{direction}_A.txt", "w"):
+        f.write(adjacency_list)
 
+    with open(f"compiled_graphs/{direction}_graph_indicator.txt", "w"):
+        f.write(graph_indicators)
 
+    with open(f"compiled_graphs/{direction}_graph_labels.txt", "w"):
+        f.write(graph_labels)
+
+    with open(f"compiled_graphs/{direction}_node_labels.txt", "w"):
+        f.write(node_labels)
+
+    with open(f"compiled_graphs/{direction}_node_attributes.txt", "w"):
+        f.write(node_attributes)
 
 
 def load_indiv_graphs(pdb_id):
@@ -101,9 +143,5 @@ indiv_graphs_dict = {pdb_id: indiv_graphs for pdb_id, indiv_graphs
                      in indiv_graphs_dict if indiv_graphs}
 
 for direction in ["btd", "dtb"]:
-    for mode in ["_normal"]:
-        for tt in ["training", "testing"]:
-            if tt == "testing":
-                mode = ""
-            save_compiled_graphs(direction, mode, tt)
+    save_compiled_graphs(direction)
 
