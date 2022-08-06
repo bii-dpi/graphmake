@@ -5,14 +5,19 @@ from progressbar import progressbar
 from sklearn.metrics.pairwise import euclidean_distances
 from concurrent.futures import ProcessPoolExecutor as PPE
 
-need to check
-
 
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
 
 atom_encoding_dict = pd.read_pickle("atom_type_encoding_dict.pkl")
+
+
+def get_indicator(element):
+    base = [0 for _ in range(len(atom_encoding_dict))]
+    base[atom_encoding_dict[element]] = 1
+
+    return base
 
 
 def get_relevant_protein_atoms(dist_matrix, protein_pairs):
@@ -23,24 +28,17 @@ def get_relevant_protein_atoms(dist_matrix, protein_pairs):
             [protein_pairs[i] for i in relevant_indices]
 
 
-def get_indicator(element):
-    base = [0 for _ in range(len(atom_encoding_dict))]
-    base[atom_encoding_dict[element]] = 1
-
-    return base
-
-
 def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
+    # Does not filter out singleton protein/ligand atoms.
     protein_pairs = list(zip(protein_elements,
-                                range(1, len(protein_elements) + 1)))
+                                range(len(protein_elements))))
     ligand_pairs = list(zip(ligand_elements,
                                range(len(protein_elements),
                                      len(protein_elements) + \
-                                        len(ligand_elements) + 1)))
+                                        len(ligand_elements))))
 
     dist_matrix, protein_pairs = \
         get_relevant_protein_atoms(dist_matrix, protein_pairs)
-
 
     node_attributes = [get_indicator(element) for element in
                        [pair[0] for pair in protein_pairs] +
@@ -52,6 +50,8 @@ def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
     for protein_index in range(dist_matrix.shape[0]):
         for ligand_index in range(dist_matrix.shape[1]):
             if dist_matrix[protein_index][ligand_index]:
+                #protein_index = protein_pairs[protein_index][1]
+                #ligand_index = ligand_pairs[ligand_index][1]
                 adjacency_list.append([protein_index, ligand_index])
                 adjacency_list.append([ligand_index, protein_index])
 
