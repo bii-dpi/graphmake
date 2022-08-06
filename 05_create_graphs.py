@@ -1,3 +1,4 @@
+import os
 import pickle
 import numpy as np
 import pandas as pd
@@ -20,29 +21,24 @@ def get_indicator(element):
     return base
 
 
-def get_relevant_protein_atoms(dist_matrix, protein_pairs):
+def get_relevant_data(dist_matrix, protein_elements, ligand_elements):
     min_dists = np.apply_along_axis(np.min, 1, dist_matrix)
-    relevant_indices = np.where(min_dists <= 6)[0]
+    relevant_proteins = np.where(min_dists <= 6)[0]
 
-    return dist_matrix[relevant_indices, :], \
-            [protein_pairs[i] for i in relevant_indices]
+    min_dists = np.apply_along_axis(np.min, 0, dist_matrix)
+    relevant_ligands = np.where(min_dists <= 6)[0]
+
+    return dist_matrix[np.ix_(relevant_proteins, relevant_ligands)], \
+            [protein_elements[i] for i in relevant_proteins], \
+            [ligand_elements[i] for i in relevant_ligands]
 
 
 def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
-    # Does not filter out singleton protein/ligand atoms.
-    protein_pairs = list(zip(protein_elements,
-                                range(len(protein_elements))))
-    ligand_pairs = list(zip(ligand_elements,
-                               range(len(protein_elements),
-                                     len(protein_elements) + \
-                                        len(ligand_elements))))
-
-    dist_matrix, protein_pairs = \
-        get_relevant_protein_atoms(dist_matrix, protein_pairs)
+    dist_matrix, protein_elements, ligand_elements = \
+        get_relevant_data(dist_matrix, protein_elements, ligand_elements)
 
     node_attributes = [get_indicator(element) for element in
-                       [pair[0] for pair in protein_pairs] +
-                       [pair[0] for pair in ligand_pairs]]
+                       protein_elements + ligand_elements]
 
     dist_matrix = dist_matrix <= 6
 
@@ -50,15 +46,18 @@ def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
     for protein_index in range(dist_matrix.shape[0]):
         for ligand_index in range(dist_matrix.shape[1]):
             if dist_matrix[protein_index][ligand_index]:
-                #protein_index = protein_pairs[protein_index][1]
-                #ligand_index = ligand_pairs[ligand_index][1]
-                adjacency_list.append([protein_index, ligand_index])
-                adjacency_list.append([ligand_index, protein_index])
+                protein_index_ = protein_index + 1
+                ligand_index_ = ligand_index + dist_matrix.shape[0] + 1
+                adjacency_list.append([protein_index_, ligand_index_])
+                adjacency_list.append([ligand_index_, protein_index_])
 
     return adjacency_list, node_attributes, is_active
 
 
 def save_graphs(pdb_id):
+    if os.path.isfile(f"indiv_graphs/{pdb_id}.pkl"):
+        return
+
     protein_elements = pd.read_pickle(f"proc_proteins/{pdb_id}_pocket.pkl")
     protein_elements = [quartet[-1] for quartet in protein_elements]
     ligand_elements_dict = pd.read_pickle(f"proc_ligands/{pdb_id}.pkl")
@@ -80,6 +79,10 @@ def save_graphs(pdb_id):
 
 
 if __name__ == "__main__":
+    '''
+    for pdb_id in progressbar(pdb_ids):
+        save_graphs(pdb_id)
+    '''
     with PPE() as executor:
         executor.map(save_graphs, pdb_ids)
 

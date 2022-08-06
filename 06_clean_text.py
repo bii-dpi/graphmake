@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from progressbar import progressbar
 
-#need to check
 
 NUM_SELECTED = 5
 
@@ -62,11 +61,7 @@ selected_b_pdb_ids = ["5RA9_A", "6B1U_D", "6Y1E_D", "4MQY_A", "6KHE_A"]
 selected_d_pdb_ids = ["2RL5", "1HWK", "3E2M", "3KG2", "2F4J"]
 
 available_smiles = dict()
-for pdb_id in selected_b_pdb_ids:
-    curr_smiles = pd.read_pickle(f"proc_ligands/{pdb_id}_dist_matrices.pkl")
-    available_smiles[pdb_id] = list(curr_smiles.keys())
-
-for pdb_id in selected_d_pdb_ids:
+for pdb_id in selected_b_pdb_ids + selected_d_pdb_ids:
     curr_smiles = pd.read_pickle(f"proc_ligands/{pdb_id}_dist_matrices.pkl")
     available_smiles[pdb_id] = list(curr_smiles.keys())
 
