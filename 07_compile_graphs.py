@@ -55,10 +55,15 @@ def save_compiled_graphs_loop(lines,
         curr_adjacency_list, curr_node_attributes, is_active = \
             indiv_graphs_dict[seq_to_id_dict[line[1]]][line[0]]
 
+        is_active += 1
+
         graph_counter += 1
         update_graph_labels(graph_labels, is_active)
 
         num_nodes = len(curr_node_attributes)
+        if num_nodes == 0:
+            print(graph_counter)
+
         update_node_labels(node_labels, num_nodes, is_active)
         update_node_attributes(node_attributes, curr_node_attributes)
 

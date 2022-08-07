@@ -37,6 +37,9 @@ def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
     dist_matrix, protein_elements, ligand_elements = \
         get_relevant_data(dist_matrix, protein_elements, ligand_elements)
 
+    if len(protein_elements) == 0:
+        return
+
     node_attributes = [get_indicator(element) for element in
                        protein_elements + ligand_elements]
 
@@ -55,8 +58,10 @@ def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
 
 
 def save_graphs(pdb_id):
+    '''
     if os.path.isfile(f"indiv_graphs/{pdb_id}.pkl"):
         return
+    '''
 
     protein_elements = pd.read_pickle(f"proc_proteins/{pdb_id}_pocket.pkl")
     protein_elements = [quartet[-1] for quartet in protein_elements]
@@ -69,10 +74,11 @@ def save_graphs(pdb_id):
         pd.read_pickle(f"proc_ligands/{pdb_id}_dist_matrices.pkl")
     ligand_graphs_dict = dict()
     for smiles in progressbar(ligand_dist_matrices_dict):
-        ligand_graphs_dict[smiles] = \
-            get_graph(ligand_dist_matrices_dict[smiles],
-                      protein_elements,
-                      *ligand_elements_dict[smiles])
+        indiv_graph = get_graph(ligand_dist_matrices_dict[smiles],
+                                protein_elements,
+                                *ligand_elements_dict[smiles])
+        if indiv_graph is not None:
+            ligand_graphs_dict[smiles] = indiv_graph
 
     with open(f"indiv_graphs/{pdb_id}.pkl", "wb") as f:
         pickle.dump(ligand_graphs_dict, f)
