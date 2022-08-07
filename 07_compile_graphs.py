@@ -1,4 +1,5 @@
 import os
+import pickle
 import numpy as np
 import pandas as pd
 from progressbar import progressbar
@@ -8,11 +9,12 @@ from concurrent.futures import ProcessPoolExecutor as PPE
 seq_to_id_dict = pd.read_pickle("b_sequence_to_id_map.pkl")
 seq_to_id_dict.update(pd.read_pickle("d_sequence_to_id_map.pkl"))
 
-selected_pdb_ids = ['1W6J_A', '3UNI_B', '6ZWO_B', '6OCU_A', '4YC6_G',
-                    '2RGP', '3FRJ', '1B9V', '3H0B', '2PRH']
+selected_pdb_ids = ["5RA9_A", "6B1U_D", "6Y1E_D", "4MQY_A", "6KHE_A"]
+selected_pdb_ids += ["2RL5", "1HWK", "3E2M", "3KG2", "2F4J"]
 
 
 def convert_to_rows(list_):
+    list_ = [str(element) for sublist in list_ for element in sublist]
     return "\n".join(list_)
 
 
@@ -21,24 +23,24 @@ def update_adjacency_list(adjacency_list, curr_adjacency_list, node_counter):
     curr_adjacency_list = [", ".join(str(node) for node in sublist)
                            for sublist in curr_adjacency_list]
 
-    return adjacency_list + curr_adjacency_list
+    adjacency_list.append(curr_adjacency_list)
 
 
 def update_graph_indicators(graph_indicators, graph_counter, num_nodes):
-    return graph_indicators + [graph_counter for _ in range(num_nodes)]
+    graph_indicators.append([graph_counter for _ in range(num_nodes)])
 
 
 def update_node_attributes(node_attributes, curr_node_attributes):
-    return node_attributes + [",".join(str(i) for i in line)
-                              for line in curr_node_attributes]
+    node_attributes.append([",".join(str(i) for i in line)
+                            for line in curr_node_attributes])
 
 
-def update_node_labels(node_labels, num_nodes):
-    return node_labels + [0 for _ in range(num_nodes)]
+def update_node_labels(node_labels, num_nodes, is_active):
+    node_labels.append([is_active for _ in range(num_nodes)])
 
 
 def update_graph_labels(graph_labels, is_active):
-    return graph_labels + [is_active]
+    graph_labels.append([is_active])
 
 
 def save_compiled_graphs_loop(lines,
@@ -54,20 +56,15 @@ def save_compiled_graphs_loop(lines,
             indiv_graphs_dict[seq_to_id_dict[line[1]]][line[0]]
 
         graph_counter += 1
-        graph_labels = update_graph_labels(graph_labels, is_active)
+        update_graph_labels(graph_labels, is_active)
 
         num_nodes = len(curr_node_attributes)
-        node_labels = update_node_labels(node_labels, num_nodes)
-        node_attributes = update_node_attributes(node_attributes,
-                                                 curr_node_attributes)
+        update_node_labels(node_labels, num_nodes, is_active)
+        update_node_attributes(node_attributes, curr_node_attributes)
 
-        graph_indicators = update_graph_indicators(graph_indicators,
-                                                   graph_counter,
-                                                   num_nodes)
+        update_graph_indicators(graph_indicators, graph_counter, num_nodes)
 
-        adjacency_list = update_adjacency_list(adjacency_list,
-                                               curr_adjacency_list,
-                                               node_counter)
+        update_adjacency_list(adjacency_list, curr_adjacency_list, node_counter)
 
         node_counter += num_nodes
 
@@ -92,8 +89,15 @@ def save_compiled_graphs(direction):
     num_training_graphs = graph_counter
     num_training_nodes = node_counter
 
-    with open(f"cleaned_text/{direction}_testing", "r") as f:
+    ###
+    if direction == "dtb":
+        direction = "btd"
+    else:
+        direction = "dtb"
+
+    with open(f"cleaned_text/{direction}_training_normal", "r") as f:
         lines = [line.split() for line in f.readlines()]
+    ###
 
     (graph_counter, node_counter,
      graph_labels, node_labels, node_attributes,
@@ -111,24 +115,24 @@ def save_compiled_graphs(direction):
     node_labels = convert_to_rows(node_labels)
     node_attributes = convert_to_rows(node_attributes)
     graph_indicators = convert_to_rows(graph_indicators)
-    adjancency_list = convert_to_rows(adjancency_list)
+    adjacency_list = convert_to_rows(adjacency_list)
 
-    with open(f"compiled_graphs/{direction}_A.txt", "w"):
+    with open(f"compiled_graphs/{direction}/raw/{direction}_A.txt", "w") as f:
         f.write(adjacency_list)
 
-    with open(f"compiled_graphs/{direction}_graph_indicator.txt", "w"):
+    with open(f"compiled_graphs/{direction}/raw/{direction}_graph_indicator.txt", "w") as f:
         f.write(graph_indicators)
 
-    with open(f"compiled_graphs/{direction}_graph_labels.txt", "w"):
+    with open(f"compiled_graphs/{direction}/raw/{direction}_graph_labels.txt", "w") as f:
         f.write(graph_labels)
 
-    with open(f"compiled_graphs/{direction}_node_labels.txt", "w"):
+    with open(f"compiled_graphs/{direction}/raw/{direction}_node_labels.txt", "w") as f:
         f.write(node_labels)
 
-    with open(f"compiled_graphs/{direction}_node_attributes.txt", "w"):
+    with open(f"compiled_graphs/{direction}/raw/{direction}_node_attributes.txt", "w") as f:
         f.write(node_attributes)
 
-    with open(f"compiled_graphs/{direction}_training_marker.pkl", "wb") as f:
+    with open(f"compiled_graphs/{direction}/raw/{direction}_training_marker.pkl", "wb") as f:
         pickle.dump((num_training_graphs, num_training_nodes), f)
 
 
@@ -136,7 +140,7 @@ def load_indiv_graphs(pdb_id):
     try:
         return pdb_id, pd.read_pickle(f"indiv_graphs/{pdb_id}.pkl")
     except:
-        return
+        return pdb_id, None
 
 
 with PPE() as executor:
