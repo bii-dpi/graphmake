@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor as PPE
 
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
-pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
+pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"][::-1]
 
 
 def save_dist_matrices(pdb_id):
@@ -23,7 +23,7 @@ def save_dist_matrices(pdb_id):
                               for smiles, pair in ligand_coords_dict.items()}
 
         ligand_distance_matrices = dict()
-        for smiles in ligand_coords_dict:
+        for smiles in progressbar(ligand_coords_dict):
             ligand_distance_matrices[smiles] = \
                 euclidean_distances(protein_coords, ligand_coords_dict[smiles])
 

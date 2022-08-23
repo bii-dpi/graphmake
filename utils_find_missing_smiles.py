@@ -11,8 +11,7 @@ CUTOFF = 6
 
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
-pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"
-and not os.path.isfile(f"missing/{pdb_id}_{CUTOFF}.pkl")]
+pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
 
 atom_encoding_dict = pd.read_pickle("atom_type_encoding_dict.pkl")
 
@@ -61,7 +60,7 @@ def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
 
 
 def save_graphs(pdb_id):
-    if os.path.isfile(f"missing/{pdb_id}_{CUTOFF}.pkl"):
+    if :
         return
 
     missing = [[], []]
@@ -90,7 +89,6 @@ def save_graphs(pdb_id):
         else:
             missing[ligand_elements_dict[smiles][1]].append(1)
 
-    print("3")
     with open(f"indiv_graphs/{pdb_id}.pkl", "wb") as f:
         pickle.dump(ligand_graphs_dict, f)
 
@@ -99,9 +97,10 @@ def save_graphs(pdb_id):
     with open(f"missing/{pdb_id}_{CUTOFF}.pkl", "wb") as f:
         pickle.dump(missing, f)
 
-    print("4")
 
-if __name__ == "__main__":
-    with PPE(max_workers=5) as executor:
-        executor.map(save_graphs, pdb_ids)
+def print_missing(pdb_id):
+    os.path.isfile(f"missing/{pdb_id}_{CUTOFF}.pkl")
+
+for pdb_id in pdb_ids:
+    print_missing(pdb_ids)
 

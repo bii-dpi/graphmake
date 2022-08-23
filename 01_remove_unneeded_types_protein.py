@@ -6,7 +6,9 @@ from progressbar import progressbar
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
+print(pdb_ids)
 
+'''
 SELECTED_TYPES = pd.read_pickle("atom_type_encoding_dict.pkl").keys()
 SELECTED_STRAINS = ["ALA",
 "CYS",
@@ -59,3 +61,4 @@ def save_proc_protein(pdb_id):
 for pdb_id in progressbar(pdb_ids):
     save_proc_protein(pdb_id)
 
+'''

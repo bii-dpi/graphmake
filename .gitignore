@@ -1,2 +1,6 @@
 */*_dist_matrices.pkl
 indiv_graphs/*
+proc_proteins/*
+proc_ligands/*
+indiv_graphs/*
+missing/*

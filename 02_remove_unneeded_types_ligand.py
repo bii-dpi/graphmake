@@ -59,18 +59,21 @@ def process_indiv(indiv, id_dict):
 
 
 def save_proc_ligands(pdb_id):
-    id_dict = get_id_dict(pdb_id)
+    try:
+        id_dict = get_id_dict(pdb_id)
 
-    with open(f"../shallowmake/ligand_mol2/dock_{pdb_id}.mol2", "r") as f:
-        split_mol2 = f.read().split("@<TRIPOS>MOLECULE")[1:]
+        with open(f"../shallowmake/ligand_mol2/dock_{pdb_id}.mol2", "r") as f:
+            split_mol2 = f.read().split("@<TRIPOS>MOLECULE")[1:]
 
-    with open(f"proc_ligands/{pdb_id}.pkl", "wb") as f:
-        results = []
-        for indiv in split_mol2:
-            curr_results = process_indiv(indiv, id_dict)
-            if curr_results is not None:
-                results.append(curr_results)
-        pickle.dump(dict(results), f)
+        with open(f"proc_ligands/{pdb_id}.pkl", "wb") as f:
+            results = []
+            for indiv in split_mol2:
+                curr_results = process_indiv(indiv, id_dict)
+                if curr_results is not None:
+                    results.append(curr_results)
+            pickle.dump(dict(results), f)
+    except Exception as e:
+        print(e)
 
 
 with PPE() as executor:
