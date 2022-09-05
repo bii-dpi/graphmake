@@ -12,8 +12,8 @@ CUTOFF = 6
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
-pdb_ids = [pdb_id for pdb_id in pdb_ids if not
-           os.path.isfile(f"proc_proteins/{pdb_id}_pocket.pkl")]
+#pdb_ids = [pdb_id for pdb_id in pdb_ids if not
+#           os.path.isfile(f"proc_proteins/{pdb_id}_pocket.pkl")]
 
 
 def save_protein_pocket(pdb_id):
@@ -40,6 +40,6 @@ def save_protein_pocket(pdb_id):
 
 
 if __name__ == "__main__":
-    with PPE(max_workers=10) as executor:
+    with PPE(max_workers=40) as executor:
         executor.map(save_protein_pocket, pdb_ids)
 

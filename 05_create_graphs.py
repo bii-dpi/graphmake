@@ -61,7 +61,7 @@ def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
 
 
 def save_graphs(pdb_id):
-    if os.path.isfile(f"missing/{pdb_id}_{CUTOFF}.pkl"):
+    if os.path.isfile(f"indiv_graphs/{pdb_id}.pkl"):
         return
 
     missing = [[], []]
@@ -90,7 +90,6 @@ def save_graphs(pdb_id):
         else:
             missing[ligand_elements_dict[smiles][1]].append(1)
 
-    print("3")
     with open(f"indiv_graphs/{pdb_id}.pkl", "wb") as f:
         pickle.dump(ligand_graphs_dict, f)
 
@@ -99,9 +98,13 @@ def save_graphs(pdb_id):
     with open(f"missing/{pdb_id}_{CUTOFF}.pkl", "wb") as f:
         pickle.dump(missing, f)
 
-    print("4")
+
+np.random.shuffle(pdb_ids)
 
 if __name__ == "__main__":
+    '''
+    for pdb_id in progressbar(pdb_ids):
+        save_graphs(pdb_id)
+    '''
     with PPE(max_workers=5) as executor:
         executor.map(save_graphs, pdb_ids)
-

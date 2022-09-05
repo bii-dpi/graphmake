@@ -55,13 +55,11 @@ def save_compiled_graphs_loop(lines,
         curr_adjacency_list, curr_node_attributes, is_active = \
             indiv_graphs_dict[seq_to_id_dict[line[1]]][line[0]]
 
-        is_active += 1
-
         graph_counter += 1
         update_graph_labels(graph_labels, is_active)
 
         num_nodes = len(curr_node_attributes)
-        if num_nodes == 0:
+        if len(curr_adjacency_list) == 0:
             print(graph_counter)
 
         update_node_labels(node_labels, num_nodes, is_active)
@@ -122,6 +120,10 @@ def save_compiled_graphs(direction):
     graph_indicators = convert_to_rows(graph_indicators)
     adjacency_list = convert_to_rows(adjacency_list)
 
+    n = len(graph_indicators.split("\n"))
+    assert n == len(node_labels.split("\n"))
+    assert n == len(node_attributes.split("\n"))
+
     with open(f"compiled_graphs/{direction}/raw/{direction}_A.txt", "w") as f:
         f.write(adjacency_list)
 
@@ -143,7 +145,7 @@ def save_compiled_graphs(direction):
 
 def load_indiv_graphs(pdb_id):
     try:
-        return pdb_id, pd.read_pickle(f"indiv_graphs/{pdb_id}.pkl")
+        return pdb_id, dict(pd.read_pickle(f"indiv_graphs/{pdb_id}.pkl"))
     except:
         return pdb_id, None
 
@@ -154,6 +156,7 @@ with PPE() as executor:
                                      #seq_to_id_dict.values())
 indiv_graphs_dict = {pdb_id: indiv_graphs for pdb_id, indiv_graphs
                      in indiv_graphs_dict if indiv_graphs}
+print("Loaded indiv graphs.")
 
 for direction in ["btd", "dtb"]:
     save_compiled_graphs(direction)
