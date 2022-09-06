@@ -4,3 +4,6 @@ proc_proteins/*
 proc_ligands/*
 indiv_graphs/*
 missing/*
+*.swp
+cleaned_text/
+backup/

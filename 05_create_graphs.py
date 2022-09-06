@@ -11,8 +11,8 @@ CUTOFF = 6
 
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
-pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"
-and not os.path.isfile(f"missing/{pdb_id}_{CUTOFF}.pkl")]
+pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
+#and not os.path.isfile(f"missing/{pdb_id}_{CUTOFF}.pkl")]
 
 atom_encoding_dict = pd.read_pickle("atom_type_encoding_dict.pkl")
 
@@ -61,50 +61,54 @@ def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
 
 
 def save_graphs(pdb_id):
-    if os.path.isfile(f"indiv_graphs/{pdb_id}.pkl"):
-        return
+    try:
+        if os.path.isfile(f"indiv_graphs/{pdb_id}.pkl"):
+            return
 
-    missing = [[], []]
+        missing = [[], []]
 
-    protein_elements = pd.read_pickle(f"proc_proteins/{pdb_id}_pocket.pkl")
+        protein_elements = pd.read_pickle(f"proc_proteins/{pdb_id}_pocket.pkl")
 
-    if not len(protein_elements):
-        return
+        if not len(protein_elements):
+            return
 
-    protein_elements = [quartet[-1] for quartet in protein_elements]
-    ligand_elements_dict = pd.read_pickle(f"proc_ligands/{pdb_id}.pkl")
-    for smiles, (ligand_elements, is_active) in ligand_elements_dict.items():
-        ligand_elements_dict[smiles] = \
-            ([quartet[-1] for quartet in ligand_elements], is_active)
+        protein_elements = [quartet[-1] for quartet in protein_elements]
+        ligand_elements_dict = pd.read_pickle(f"proc_ligands/{pdb_id}.pkl")
+        for smiles, (ligand_elements, is_active) in ligand_elements_dict.items():
+            ligand_elements_dict[smiles] = \
+                ([quartet[-1] for quartet in ligand_elements], is_active)
 
-    ligand_dist_matrices_dict = \
-        pd.read_pickle(f"proc_ligands/{pdb_id}_dist_matrices.pkl")
-    ligand_graphs_dict = dict()
-    for smiles in ligand_dist_matrices_dict:
-        indiv_graph = get_graph(ligand_dist_matrices_dict[smiles],
-                                protein_elements,
-                                *ligand_elements_dict[smiles])
-        if indiv_graph is not None:
-            ligand_graphs_dict[smiles] = indiv_graph
-            missing[ligand_elements_dict[smiles][1]].append(0)
-        else:
-            missing[ligand_elements_dict[smiles][1]].append(1)
+        ligand_dist_matrices_dict = \
+            pd.read_pickle(f"proc_ligands/{pdb_id}_dist_matrices.pkl")
+        ligand_graphs_dict = dict()
+        for smiles in ligand_dist_matrices_dict:
+            indiv_graph = get_graph(ligand_dist_matrices_dict[smiles],
+                                    protein_elements,
+                                    *ligand_elements_dict[smiles])
+            if indiv_graph is not None:
+                ligand_graphs_dict[smiles] = indiv_graph
+                missing[ligand_elements_dict[smiles][1]].append(0)
+            else:
+                missing[ligand_elements_dict[smiles][1]].append(1)
 
-    with open(f"indiv_graphs/{pdb_id}.pkl", "wb") as f:
-        pickle.dump(ligand_graphs_dict, f)
+        with open(f"indiv_graphs/{pdb_id}.pkl", "wb") as f:
+            pickle.dump(ligand_graphs_dict, f)
 
-    missing[0] = np.mean(missing[0])
-    missing[1] = np.mean(missing[1])
-    with open(f"missing/{pdb_id}_{CUTOFF}.pkl", "wb") as f:
-        pickle.dump(missing, f)
+        missing[0] = np.mean(missing[0])
+        missing[1] = np.mean(missing[1])
+        with open(f"missing/{pdb_id}_{CUTOFF}.pkl", "wb") as f:
+            pickle.dump(missing, f)
+    except Exception as e:
+        print(e)
+        print(pdb_id)
 
 
 np.random.shuffle(pdb_ids)
 
 if __name__ == "__main__":
-    '''
     for pdb_id in progressbar(pdb_ids):
         save_graphs(pdb_id)
     '''
-    with PPE(max_workers=5) as executor:
+    with PPE(max_workers=28) as executor:
         executor.map(save_graphs, pdb_ids)
+    '''
