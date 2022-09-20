@@ -7,3 +7,4 @@ missing/*
 *.swp
 cleaned_text/
 backup/
+line_dicts/*

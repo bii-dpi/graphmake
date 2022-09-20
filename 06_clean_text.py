@@ -10,7 +10,7 @@ seq_to_id_dict = pd.read_pickle("b_sequence_to_id_map.pkl")
 seq_to_id_dict.update(pd.read_pickle("d_sequence_to_id_map.pkl"))
 
 b_pdb_ids = [pdb_id for pdb_id in list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
-             if pdb_id != "5YZ0_B"]
+             if pdb_id != "5YZ0_B" and pdb_id != "6WHC_R"]
 d_pdb_ids = list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 
 
