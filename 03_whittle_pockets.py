@@ -40,6 +40,6 @@ def save_protein_pocket(pdb_id):
 
 
 if __name__ == "__main__":
-    with PPE(max_workers=40) as executor:
+    with PPE(max_workers=80) as executor:
         executor.map(save_protein_pocket, pdb_ids)
 
