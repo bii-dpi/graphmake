@@ -20,7 +20,7 @@ atom_encoding_dict = pd.read_pickle("atom_type_encoding_dict.pkl")
 
 
 def convert_to_torch(adjacency_list, node_attributes):
-    adjacency_list = np.array(adjacency_list).T - 1
+    adjacency_list = np.array(adjacency_list).T
     node_attributes = np.array(node_attributes)
 
     return Data(x=Tensor(node_attributes),
@@ -47,11 +47,9 @@ def get_graph(ligand_rows, is_active):
     adjacency_list = []
     for index_1 in range(dist_matrix.shape[0]):
         for index_2 in range(dist_matrix.shape[1]):
-            if dist_matrix[index_1][index_2]:
-                index_1_ = index_1 + 1
-                index_2_ = index_2 + dist_matrix.shape[0] + 1
-                adjacency_list.append([index_1_, index_2_])
-                adjacency_list.append([index_2_, index_1_])
+            if dist_matrix[index_1][index_2] and index_1 != index_2:
+                adjacency_list.append([index_1, index_2])
+                adjacency_list.append([index_2, index_1])
 
     return convert_to_torch(adjacency_list, node_attributes)
 

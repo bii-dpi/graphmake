@@ -3,6 +3,8 @@ import pickle
 import numpy as np
 import pandas as pd
 from progressbar import progressbar
+from torch import Tensor, LongTensor
+from torch_geometric.data import Data
 from sklearn.metrics.pairwise import euclidean_distances
 from concurrent.futures import ProcessPoolExecutor as PPE
 
@@ -11,10 +13,20 @@ CUTOFF = 6
 
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
-pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
+pdb_ids = [pdb_id for pdb_id in pdb_ids
+           if pdb_id != "5YZ0_B" and pdb_id != "6WHC_R"]
 #and not os.path.isfile(f"missing/{pdb_id}_{CUTOFF}.pkl")]
 
 atom_encoding_dict = pd.read_pickle("atom_type_encoding_dict.pkl")
+
+
+def convert_to_torch(adjacency_list, node_attributes):
+    adjacency_list = np.array(adjacency_list).T
+    node_attributes = np.array(node_attributes)
+
+    return Data(x=Tensor(node_attributes),
+                edge_index=LongTensor(adjacency_list),
+                num_nodes=len(node_attributes))
 
 
 def get_indicator(element):
@@ -36,7 +48,7 @@ def get_relevant_data(dist_matrix, protein_elements, ligand_elements):
             [ligand_elements[i] for i in relevant_ligands]
 
 
-def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
+def get_graph(dist_matrix, protein_elements, ligand_elements):
     dist_matrix, protein_elements, ligand_elements = \
         get_relevant_data(dist_matrix, protein_elements, ligand_elements)
 
@@ -57,12 +69,12 @@ def get_graph(dist_matrix, protein_elements, ligand_elements, is_active):
                 adjacency_list.append([protein_index_, ligand_index_])
                 adjacency_list.append([ligand_index_, protein_index_])
 
-    return adjacency_list, node_attributes, is_active
+    return convert_to_torch(adjacency_list, node_attributes)
 
 
 def save_graphs(pdb_id):
     try:
-        if os.path.isfile(f"indiv_graphs/{pdb_id}.pkl"):
+        if os.path.isfile(f"joined_graphs/{pdb_id}.pkl"):
             return
 
         missing = [[], []]
@@ -82,16 +94,16 @@ def save_graphs(pdb_id):
             pd.read_pickle(f"proc_ligands/{pdb_id}_dist_matrices.pkl")
         ligand_graphs_dict = dict()
         for smiles in ligand_dist_matrices_dict:
-            indiv_graph = get_graph(ligand_dist_matrices_dict[smiles],
+            joined_graph = get_graph(ligand_dist_matrices_dict[smiles],
                                     protein_elements,
-                                    *ligand_elements_dict[smiles])
-            if indiv_graph is not None:
-                ligand_graphs_dict[smiles] = indiv_graph
+                                    ligand_elements_dict[smiles][0])
+            if joined_graph is not None:
+                ligand_graphs_dict[smiles] = joined_graph
                 missing[ligand_elements_dict[smiles][1]].append(0)
             else:
                 missing[ligand_elements_dict[smiles][1]].append(1)
 
-        with open(f"indiv_graphs/{pdb_id}.pkl", "wb") as f:
+        with open(f"joined_graphs/{pdb_id}.pkl", "wb") as f:
             pickle.dump(ligand_graphs_dict, f)
 
         missing[0] = np.mean(missing[0])
@@ -106,9 +118,10 @@ def save_graphs(pdb_id):
 np.random.shuffle(pdb_ids)
 
 if __name__ == "__main__":
+    '''
     for pdb_id in progressbar(pdb_ids):
         save_graphs(pdb_id)
     '''
     with PPE(max_workers=28) as executor:
         executor.map(save_graphs, pdb_ids)
-    '''
+

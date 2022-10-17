@@ -14,8 +14,6 @@ pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"][::-1]
 def save_dist_matrices(pdb_id):
     protein_coords = pd.read_pickle(f"proc_proteins/{pdb_id}_pocket.pkl")
     try:
-        if not protein_coords:
-            return
         protein_coords = [coord[:-1] for coord in protein_coords]
 
         ligand_coords_dict = pd.read_pickle(f"proc_ligands/{pdb_id}.pkl")

@@ -8,3 +8,5 @@ missing/*
 cleaned_text/
 backup/
 line_dicts/*
+*_graphs/
+backup*/

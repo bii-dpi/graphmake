@@ -14,7 +14,10 @@ pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
 #pdb_ids = [pdb_id for pdb_id in pdb_ids if not
 #           os.path.isfile(f"proc_proteins/{pdb_id}_pocket.pkl")]
-
+pdb_ids = [
+"1Q4X",
+"3C4F",
+"5RA9_A"]
 
 def save_protein_pocket(pdb_id):
     protein_coords = pd.read_pickle(f"proc_proteins/{pdb_id}.pkl")
