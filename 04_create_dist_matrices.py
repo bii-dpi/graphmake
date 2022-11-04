@@ -1,3 +1,4 @@
+import os
 import pickle
 import numpy as np
 import pandas as pd
@@ -9,6 +10,9 @@ from concurrent.futures import ProcessPoolExecutor as PPE
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"][::-1]
+pdb_ids = [pdb_id for pdb_id in pdb_ids if not
+           os.path.isfile(f"proc_ligands/{pdb_id}_dist_matrices.pkl")]
+print(len(pdb_ids))
 
 
 def save_dist_matrices(pdb_id):
@@ -32,6 +36,6 @@ def save_dist_matrices(pdb_id):
         return
 
 if __name__ == "__main__":
-    with PPE() as executor:
+    with PPE(max_workers=10) as executor:
         executor.map(save_dist_matrices, pdb_ids)
 

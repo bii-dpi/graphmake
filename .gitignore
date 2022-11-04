@@ -10,3 +10,4 @@ backup/
 line_dicts/*
 *_graphs/
 backup*/
+to_delete/

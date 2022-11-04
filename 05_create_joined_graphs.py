@@ -10,12 +10,14 @@ from concurrent.futures import ProcessPoolExecutor as PPE
 
 
 CUTOFF = 6
+CUTOFF = 10
 
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids
-           if pdb_id != "5YZ0_B" and pdb_id != "6WHC_R"]
-#and not os.path.isfile(f"missing/{pdb_id}_{CUTOFF}.pkl")]
+           if pdb_id != "5YZ0_B" and pdb_id != "6WHC_R"
+and not os.path.isfile(f"joined_graphs/{pdb_id}.pkl")]
+print(len(pdb_ids))
 
 atom_encoding_dict = pd.read_pickle("atom_type_encoding_dict.pkl")
 
@@ -30,8 +32,11 @@ def convert_to_torch(adjacency_list, node_attributes):
 
 
 def get_indicator(element):
-    base = [0 for _ in range(len(atom_encoding_dict))]
-    base[atom_encoding_dict[element]] = 1
+    base = [0 for _ in range(len(atom_encoding_dict) + 1)]
+    try:
+        base[atom_encoding_dict[element]] = 1
+    except:
+        base[-1] = 1
 
     return base
 
@@ -64,8 +69,8 @@ def get_graph(dist_matrix, protein_elements, ligand_elements):
     for protein_index in range(dist_matrix.shape[0]):
         for ligand_index in range(dist_matrix.shape[1]):
             if dist_matrix[protein_index][ligand_index]:
-                protein_index_ = protein_index + 1
-                ligand_index_ = ligand_index + dist_matrix.shape[0] + 1
+                protein_index_ = protein_index
+                ligand_index_ = ligand_index + dist_matrix.shape[0]
                 adjacency_list.append([protein_index_, ligand_index_])
                 adjacency_list.append([ligand_index_, protein_index_])
 
@@ -122,6 +127,6 @@ if __name__ == "__main__":
     for pdb_id in progressbar(pdb_ids):
         save_graphs(pdb_id)
     '''
-    with PPE(max_workers=28) as executor:
+    with PPE(max_workers=5) as executor:
         executor.map(save_graphs, pdb_ids)
 

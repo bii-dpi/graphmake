@@ -7,17 +7,19 @@ from sklearn.metrics.pairwise import euclidean_distances
 from concurrent.futures import ProcessPoolExecutor as PPE
 
 
-CUTOFF = 6
+CUTOFF = 10
 
 pdb_ids = list(pd.read_pickle("b_sequence_to_id_map.pkl").values())
 pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
-#pdb_ids = [pdb_id for pdb_id in pdb_ids if not
-#           os.path.isfile(f"proc_proteins/{pdb_id}_pocket.pkl")]
+pdb_ids = [pdb_id for pdb_id in pdb_ids if not
+           os.path.isfile(f"proc_proteins/{pdb_id}_pocket.pkl")][::-1]
+'''
 pdb_ids = [
 "1Q4X",
 "3C4F",
 "5RA9_A"]
+'''
 
 def save_protein_pocket(pdb_id):
     protein_coords = pd.read_pickle(f"proc_proteins/{pdb_id}.pkl")
@@ -39,10 +41,11 @@ def save_protein_pocket(pdb_id):
     with open(f"proc_proteins/{pdb_id}_pocket.pkl", "wb") as f:
         protein_coords = pd.read_pickle(f"proc_proteins/{pdb_id}.pkl")
         protein_pocket_coords = [protein_coords[i] for i in pocket_indices]
+        print({l[-1] for l in protein_pocket_coords})
         pickle.dump(protein_pocket_coords, f)
 
 
 if __name__ == "__main__":
-    with PPE(max_workers=80) as executor:
+    with PPE(max_workers=10) as executor:
         executor.map(save_protein_pocket, pdb_ids)
 

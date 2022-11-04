@@ -49,7 +49,9 @@ def process_indiv(indiv, id_dict):
         start = indiv.index("@<TRIPOS>ATOM") + 1
         end = indiv.index("@<TRIPOS>BOND")
         indiv = [process_line(line) for line in indiv[start: end]]
+        '''
         indiv = [line for line in indiv if line[-1] in SELECTED_TYPES]
+        '''
 
         return ligand_name, (indiv, is_active)
     except Exception as e:

@@ -8,8 +8,6 @@ pdb_ids += list(pd.read_pickle("d_sequence_to_id_map.pkl").values())
 pdb_ids = [pdb_id for pdb_id in pdb_ids if pdb_id != "5YZ0_B"]
 print(pdb_ids)
 
-'''
-SELECTED_TYPES = pd.read_pickle("atom_type_encoding_dict.pkl").keys()
 SELECTED_STRAINS = ["ALA",
 "CYS",
 "ASP",
@@ -39,8 +37,6 @@ def process_line(line):
     line = [float(line[2]), float(line[3]), float(line[4]),
             line[5].split(".")[0]]
 
-    if line[-1] not in SELECTED_TYPES:
-        return []
     return line
 
 
@@ -61,4 +57,3 @@ def save_proc_protein(pdb_id):
 for pdb_id in progressbar(pdb_ids):
     save_proc_protein(pdb_id)
 
-'''
